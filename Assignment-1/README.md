@@ -4,4 +4,4 @@ I found this website which uses the WebGL framework to create an aquarium of jel
 https://akirodic.com/p/jellyfish/
 
 I chose this website because I really like how you can modify the scene parameters and play around with the webapp's performance, and it also looks very nice.
-This program does a lot with very little in terms of computer resources. It's a very simple program, but it's very well done.
+I also like Jellyfish.
