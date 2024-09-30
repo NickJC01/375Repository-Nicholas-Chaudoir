@@ -1,49 +1,102 @@
-let gl;
-let matrixStack;
-let shapes = [];
+let glCone, glSphere, glCylinder;
+let matrixStackCone, matrixStackSphere, matrixStackCylinder;
+let cone, sphere, cylinder;
+let angle = 0.0;
 
-function init() {
-    let canvas = document.getElementById("webgl-canvas");
-    gl = canvas.getContext("webgl2");
-    if (!gl) {
-        alert("Your Web browser doesn't support WebGL 2\nPlease contact Dave");
+window.onload = function() {
+    // Initialize the canvases and WebGL context
+    const coneCanvas = document.getElementById("cone-canvas");
+    glCone = coneCanvas.getContext("webgl2");
+
+    if (!glCone) {
+        alert("WebGL 2 is not supported by your browser.");
         return;
     }
 
-    matrixStack = new MatrixStack();
+    const sphereCanvas = document.getElementById("sphere-canvas");
+    glSphere = sphereCanvas.getContext("webgl2");
 
-    // Initialize shapes
-    shapes.push(new Cone(gl, { color: [1, 0, 0, 1] }));
-    shapes.push(new Cylinder(gl, { color: [0, 1, 0, 1] }));
-    shapes.push(new Sphere(gl, { color: [0, 0, 1, 1] }));
+    if (!glSphere) {
+        alert("WebGL 2 is not supported by your browser.");
+        return;
+    }
 
-    // Initial transformations to fit them within the canvas without overlapping
-    shapes[0].transform = mat4.translate(mat4.create(), mat4.create(), [-0.6, 0, 0]);
-    shapes[1].transform = mat4.translate(mat4.create(), mat4.create(), [0.6, 0, 0]);
-    shapes[2].transform = mat4.translate(mat4.create(), mat4.create(), [0, 0.6, 0]);
+    const cylinderCanvas = document.getElementById("cylinder-canvas");
+    glCylinder = cylinderCanvas.getContext("webgl2");
 
-    requestAnimationFrame(render);
-}
+    if (!glCylinder) {
+        alert("WebGL 2 is not supported by your browser.");
+        return;
+    }
+
+    // Set clear colors and enable depth testing for all contexts
+    glCone.clearColor(0.2, 0.2, 0.2, 1.0);
+    glCone.enable(glCone.DEPTH_TEST);
+
+    glSphere.clearColor(0.2, 0.2, 0.2, 1.0);
+    glSphere.enable(glSphere.DEPTH_TEST);
+
+    glCylinder.clearColor(0.2, 0.2, 0.2, 1.0);
+    glCylinder.enable(glCylinder.DEPTH_TEST);
+
+    // Initialize the matrix stacks and shapes
+    cone = new Cone(glCone, 36);       // 36 segments for the cone
+    sphere = new Sphere(glSphere, 3, 36);  // Make the sphere a triangle cuz I'm a rebel
+    cylinder = new Cylinder(glCylinder, 48); // 48 Segments but I still don't know why it's not a cylinder
+
+    matrixStackCone = new MatrixStack();
+    matrixStackSphere = new MatrixStack();
+    matrixStackCylinder = new MatrixStack();
+
+    // Start the rendering process for all objects
+    render();
+};
 
 function render() {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    matrixStack.loadIdentity();
-    shapes.forEach((shape, index) => {
-        matrixStack.push();
-        matrixStack.multiply(shape.transform);
-
-        // Animation for the first object
-        if (index === 0) {
-            let rotation = mat4.rotate(mat4.create(), mat4.create(), 0.01, [0, 1, 0]);
-            mat4.multiply(shape.transform, shape.transform, rotation);
-        }
-
-        shape.render(matrixStack.top());
-        matrixStack.pop();
-    });
-
     requestAnimationFrame(render);
-}
 
-window.onload = init;
+    // ----- Render the rotating cone -----
+    glCone.clear(glCone.COLOR_BUFFER_BIT | glCone.DEPTH_BUFFER_BIT);
+
+    // Increment the rotation angle for the cone
+    angle += 1.0;
+    angle %= 360.0;
+
+    // Push the current matrix onto the stack for the cone
+    matrixStackCone.push();
+
+    matrixStackCone.rotate(angle, [1, 1, 0]);  // Rotate the cone
+    matrixStackCone.scale([0.6, 0.6, 0.6]);    // Scale the cone
+
+    // Pass the current matrix to the cone and draw it
+    cone.MV = matrixStackCone.current();
+    cone.draw();
+
+    // Pop the matrix after drawing the cone
+    matrixStackCone.pop();
+
+    // ----- Render the stationary sphere -----
+    glSphere.clear(glSphere.COLOR_BUFFER_BIT | glSphere.DEPTH_BUFFER_BIT);
+
+    matrixStackSphere.push();
+
+    matrixStackSphere.scale([0.6, 0.6, 0.6]);    // Scale the sphere
+
+    sphere.MV = matrixStackSphere.current();
+    sphere.draw();
+
+    matrixStackSphere.pop();
+
+    // ----- Render the rotating cylinder -----
+    glCylinder.clear(glCylinder.COLOR_BUFFER_BIT | glCylinder.DEPTH_BUFFER_BIT);
+
+    matrixStackCylinder.push();
+
+    matrixStackCylinder.rotate(angle, [1, 0, 0]);  // Flip rotation around X axis
+    matrixStackCylinder.scale([0.4, 0.02, 0.4]);   
+
+    cylinder.MV = matrixStackCylinder.current();
+    cylinder.draw();
+
+    matrixStackCylinder.pop();
+}

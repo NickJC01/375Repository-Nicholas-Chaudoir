@@ -44,16 +44,18 @@ function vec2() {
 }
 
 function vec3() {
-    let result = _argumentsToArray( arguments );
+    let result = _argumentsToArray(arguments);
      
-    switch ( result.length ) {
-        case 0: result.push( 0.0 );
-        case 1: result.push( 0.0 );
-        case 2: result.push( 0.0 );
+    switch (result.length) {
+        case 0: result.push(0.0);
+        case 1: result.push(0.0);
+        case 2: result.push(0.0);
     }
-    
-    result = result.splice( 0, 3 );
+
+    result = result.slice(0, 3);  // Use slice() to get the first 3 elements
     result.type = "vec3";
+
+    return result;
 }
 
 function vec4() {

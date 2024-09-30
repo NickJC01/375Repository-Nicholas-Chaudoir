@@ -3,12 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>WebGL Shapes</title>
+    <!-- Styles for fixed-size canvas -->
+    <style>
+        body, html { margin: 0; height: 100%; overflow: hidden; display: flex; justify-content: space-around; align-items: center; }
+        canvas { width: 512px; height: 512px; display: block; }
+    </style>
+</head>
+<body>
+    <!-- Canvas for the cone -->
+    <canvas id="cone-canvas" width="512" height="512"></canvas>
+    
+    <!-- Canvas for the sphere -->
+    <canvas id="sphere-canvas" width="512" height="512"></canvas>
+    
+    <!-- Canvas for the cylinder -->
+    <canvas id="cylinder-canvas" width="512" height="512"></canvas>
+
+    <!-- WebGL utility scripts -->
     <script src="Common/initShaders.js"></script>
     <script src="Common/MV.js"></script>
     <script src="Common/MatrixStack.js"></script>
-    <script src="shapes.js"></script>
-</head>
-<body>
-    <canvas id="webgl-canvas" width="800" height="800"></canvas>
+    
+    <!-- Shape definitions -->
+    <script src="Common/Shapes/Cone.js"></script>
+    <script src="Common/Shapes/Sphere.js"></script>
+    <script src="Common/Shapes/Cylinder.js"></script> <!-- Include the cylinder.js file -->
+    
+    <!-- Main rendering script -->
+    <script src="shapes.js"></script> <!-- For rendering all objects -->
 </body>
 </html>

@@ -5,7 +5,6 @@
 //  Class for rendering a sphere, centered at the origin, with a radius
 //    of one.
 //
-
 'use strict;'
 
 class Sphere {
@@ -85,6 +84,7 @@ class Sphere {
         setupConstant("numSlices", numSlices);
         gl.useProgram(null);
 
+        // Modify the draw function to render with gl.LINES
         this.draw = () => {
             gl.useProgram(program);
 
@@ -92,8 +92,11 @@ class Sphere {
             program.P();
             program.color();
 
-            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 
-                2*(numSlices + 1), numStrips);
+            // First draw horizontal (latitudinal) lines
+            gl.drawArraysInstanced(gl.LINES, 0, 2 * (numSlices + 1), numStrips);
+
+            // Now draw vertical (longitudinal) lines
+            gl.drawArraysInstanced(gl.LINES, 0, 2 * (numStrips + 1), numSlices);
 
             gl.useProgram(null);
         };
@@ -105,6 +108,4 @@ class Sphere {
             max : [1.0, 1.0, 1.0] 
         };
     }
-};
-
-
+}
