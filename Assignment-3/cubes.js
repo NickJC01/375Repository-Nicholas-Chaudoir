@@ -28,7 +28,7 @@ function init() {
     ];
 
     let near = 2.0;
-    let far = 4.0;
+    let far = 5.0;
     let P = perspective(60.0, 1.0, near, far);
 
     for (let c of cubes) {
