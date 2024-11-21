@@ -27,6 +27,9 @@ I want a simple user interface that allows users to interact with the fish food,
 **Things that would be cool**
 
 Audio - Pond sound effects, nature SFX, etc..
+
 Better Shaders - realistic shadows
+
 Pond props - things like leaves or lily pads that block light or interaction?
+
 Environment settings - change the map surrounding the koi pond. Winter version?
