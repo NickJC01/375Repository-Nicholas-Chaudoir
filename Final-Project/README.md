@@ -5,8 +5,11 @@ The Vision: I want to build an interactive 3D koi pond where users can click on 
 **Project Schedule**
 
 Week 1: Research and gather resources for low-poly koi models and water textures. Begin basic setup of the 3D environment using Three.js.
+
 Week 2: Implement the koi fish with basic swimming animations. Set up the interactive water surface to respond to clicks with basic ripple effects.
+
 Week 3: Add interactive behaviors such as fish moving away from ripples and swimming towards food when dropped into the pond.
+
 Week 4: Finalize the user interface for dropping food and creating ripples. Polish the graphics, add ambient sounds, and prepare the project presentation.
 
 **Project Technical Requirements**
