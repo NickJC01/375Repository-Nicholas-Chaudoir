@@ -28,7 +28,7 @@ I want a simple user interface that allows users to interact with the fish food,
 
 Audio - Pond sound effects, nature SFX, etc..
 
-Better Shaders - realistic shadows
+Better shaders - realistic shadows
 
 Pond props - things like leaves or lily pads that block light or interaction?
 
