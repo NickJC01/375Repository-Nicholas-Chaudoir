@@ -1,3 +1,8 @@
+**Project Status**
+- Impemented basic koi fish with swimming animations
+- Implemented water volume with ripples generated on click
+- Implemented scene lighting and shaders for realistic water
+
 **Project Overview**
 
 The Vision: I want to build an interactive 3D koi pond where users can click on the pond to create ripples and feed the fish. The koi will react naturally to user interactions, moving away from or dodging ripples and moving towards dropped food.
