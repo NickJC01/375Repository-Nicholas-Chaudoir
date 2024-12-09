@@ -10,106 +10,117 @@ async function init() {
     const vertexShaderSrc = await fetchShader('shaders/vertexShader.glsl');
     const fragmentShaderSrc = await fetchShader('shaders/fragmentShader.glsl');
 
-    // Scene and Camera
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 4.6, 0); // Top-down view
-    camera.lookAt(new THREE.Vector3(0, 0, 0)); // Point camera to the center
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer();
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const cameraHeight = 7;
+    const camera = new THREE.OrthographicCamera(
+        -cameraHeight * aspectRatio / 2,
+        cameraHeight * aspectRatio / 2,
+        cameraHeight / 2,
+        -cameraHeight / 2,
+        0.1,
+        1000
+    );
+    camera.position.set(0, 5, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('scene-container').appendChild(renderer.domElement);
 
-    // Water plane with ripple shader
-    const planeGeometry = new THREE.PlaneGeometry(10, 10, 200, 200);
-    const planeMaterial = new THREE.ShaderMaterial({
-        vertexShader: vertexShaderSrc,
-        fragmentShader: fragmentShaderSrc,
-        uniforms: {
-            time: { value: 0.0 },
-            clickPosition: { value: new THREE.Vector2(-10000, -10000) },
-            startTime: { value: 0.0 },
-            duration: { value: 1.0 },
-            baseColor: { value: new THREE.Color(0x0a2647) },
-            opacity: { value: 0.3 }, // Adjust transparency
-        },
-        transparent: true,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-        blending: THREE.NormalBlending,
-    });
-    const waterPlane = new THREE.Mesh(planeGeometry, planeMaterial);
-    waterPlane.rotation.x = -Math.PI / 2;
-    waterPlane.position.y = 0.01; // Slightly above the box
-    waterPlane.renderOrder = 1; // Render after other objects
-    scene.add(waterPlane);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(ambientLight, directionalLight);
 
-    // Texture loader for pond base
-    const textureLoader = new THREE.TextureLoader();
-    const pondBaseTexture = textureLoader.load(
-        'textures/pondbase.webp',
-        () => console.log('Texture loaded successfully'),
-        undefined,
-        (err) => console.error('Texture loading error:', err)
-    );
+    const waterManager = new WaterManager(scene, renderer, camera, vertexShaderSrc, fragmentShaderSrc);
+    const fishManager = new FishManager(scene, 'models/koi_fish.glb');
+    fishManager.spawnFish(5);
 
-    // Add textured plane below the box (pond base)
-    const pondPlaneGeometry = new THREE.PlaneGeometry(10, 10);
-    const pondPlaneMaterial = new THREE.MeshBasicMaterial({
-        map: pondBaseTexture,
-        side: THREE.DoubleSide, // Render both sides for flexibility
-    });
-    const pondPlane = new THREE.Mesh(pondPlaneGeometry, pondPlaneMaterial);
-    pondPlane.rotation.x = -Math.PI / 2;
-    pondPlane.position.y = -1.5; // Position below the box
-    scene.add(pondPlane);
+    function addBoundaryPlaneWithCutout(scene) {
+        const outerWidth = 50; // Total width of the large plane
+        const outerHeight = 50; // Total height of the large plane
+        const innerWidth = 10; // Width of the cut-out middle
+        const innerHeight = 10; // Height of the cut-out middle
+    
+        // Create the outer rectangle
+        const outerShape = new THREE.Shape();
+        outerShape.moveTo(-outerWidth / 2, -outerHeight / 2);
+        outerShape.lineTo(-outerWidth / 2, outerHeight / 2);
+        outerShape.lineTo(outerWidth / 2, outerHeight / 2);
+        outerShape.lineTo(outerWidth / 2, -outerHeight / 2);
+        outerShape.lineTo(-outerWidth / 2, -outerHeight / 2);
+    
+        // Create the inner rectangle (cut-out area)
+        const innerHole = new THREE.Path();
+        innerHole.moveTo(-innerWidth / 2, -innerHeight / 2);
+        innerHole.lineTo(-innerWidth / 2, innerHeight / 2);
+        innerHole.lineTo(innerWidth / 2, innerHeight / 2);
+        innerHole.lineTo(innerWidth / 2, -innerHeight / 2);
+        innerHole.lineTo(-innerWidth / 2, -innerHeight / 2);
+    
+        outerShape.holes.push(innerHole);
+    
+        const boundaryGeometry = new THREE.ShapeGeometry(outerShape);
+        const boundaryMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            side: THREE.DoubleSide,
+        });
+    
+        const boundaryMesh = new THREE.Mesh(boundaryGeometry, boundaryMaterial);
+        boundaryMesh.rotation.x = -Math.PI / 2; // Rotate to lay flat
+        boundaryMesh.position.set(0, 3, 0); // Set above the water plane
+    
+        scene.add(boundaryMesh);
+    }
+    
+    addBoundaryPlaneWithCutout(scene);
 
-    // Box volume for water depth visualization
-    const boxGeometry = new THREE.BoxGeometry(10, 2.5, 10);
-    const boxMaterial = new THREE.MeshBasicMaterial({
-        color: 0x0a2647,
-        transparent: true,
-        opacity: 0.3, // Increase transparency for the box
-    });
-    const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    box.position.y = -1.25; // Slightly above the pond base
-    scene.add(box);
+    // Animation clock
+    const clock = new THREE.Clock();
 
-    // Test object (red sphere) below the pond base
-    const testSphereGeometry = new THREE.SphereGeometry(1, 32, 32);
-    const testSphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
-    const testSphere = new THREE.Mesh(testSphereGeometry, testSphereMaterial);
-    testSphere.position.set(0, -3.5, 0); // Position below the pond base
-    scene.add(testSphere);
+    function addLilyPads() {
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+            'models/lily_pads.glb',
+            (gltf) => {
+                const lilyPads = gltf.scene;
 
-    // Animate the scene
+                // Position and scale lily pads
+                lilyPads.scale.set(0.2, 0.2, 0.2); // Adjust scale
+                lilyPads.position.set(-3.5, -0.025, 2.5); // Position on the pond surface
+
+                scene.add(lilyPads);
+            },
+            undefined,
+            (error) => {
+                console.error('Error loading lily_pads.glb:', error);
+            }
+        );
+    }
+    addLilyPads();
     function animate() {
-        requestAnimationFrame(animate);
-        planeMaterial.uniforms.time.value += 0.016; // Update ripple time
+        const deltaTime = clock.getDelta(); // Use delta time for smooth animation updates
+
+        waterManager.update();
+        fishManager.animateFish(deltaTime);
+
         renderer.render(scene, camera);
+        requestAnimationFrame(animate);
     }
 
-    // Raycasting for ripple interaction
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    renderer.domElement.addEventListener('click', function (event) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObject(waterPlane);
-
-        if (intersects.length > 0) {
-            const point = intersects[0].point;
-            planeMaterial.uniforms.clickPosition.value.set(point.x, -point.z);
-            planeMaterial.uniforms.startTime.value = planeMaterial.uniforms.time.value; // Sync ripple start time
-        }
-    });
-
     animate();
+
+    window.addEventListener('resize', () => {
+        const newAspectRatio = window.innerWidth / window.innerHeight;
+        camera.left = -cameraHeight * newAspectRatio / 2;
+        camera.right = cameraHeight * newAspectRatio / 2;
+        camera.top = cameraHeight / 2;
+        camera.bottom = -cameraHeight / 2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 }
 
 init().catch(console.error);
